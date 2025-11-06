@@ -1,0 +1,49 @@
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# Downloaded videos
+videos/public/*.mp4
+
+# Excel database (comment out if you want to commit)
+# data/posts.xlsx
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# n8n data
+n8n-data/
+
+# Windows
+$RECYCLE.BIN/
+
+# Build outputs
+dist/
+build/
+
+# Test files
+test-*.js
+debug-*.js
+
+# Backup files
+*.bak
+*.backup

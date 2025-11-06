@@ -1,0 +1,89 @@
+{
+  "name": "TikTok to Facebook Auto-Post",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "tiktok-video",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - New Video URL",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "tiktok-video-webhook"
+    },
+    {
+      "parameters": {
+        "operation": "executeCommand",
+        "command": "cd D:\\project\\ToolAuto\\tiktok-shopee-automation && npm run download:ytdlp"
+      },
+      "id": "download-video",
+      "name": "Download Video (yt-dlp)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeCommand",
+        "command": "cd D:\\project\\ToolAuto\\tiktok-shopee-automation && node scripts/facebook-publisher-simple.js"
+      },
+      "id": "post-facebook",
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "value1": "={{ $json.body.status }}",
+        "value2": "success"
+      },
+      "id": "response",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - New Video URL": {
+      "main": [
+        [
+          {
+            "node": "Download Video (yt-dlp)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video (yt-dlp)": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "1"
+}

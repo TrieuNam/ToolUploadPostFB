@@ -1,0 +1,299 @@
+{
+  "name": "TikTok Auto Post with Shopee Affiliate",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 10
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "Posts!A:Z"
+      },
+      "id": "read-sheet",
+      "name": "Read Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1",
+          "name": "Google Sheets OAuth2"
+        }
+      },
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Lọc hàng status=NEW và đến giờ đăng\nconst now = new Date();\nconst validRows = items.filter(item => {\n  const status = item.json.status || 'NEW';\n  const scheduleTime = item.json.schedule_time ? new Date(item.json.schedule_time) : now;\n  return status === 'NEW' && scheduleTime <= now;\n});\n\nreturn validRows.map(row => ({ json: row.json }));"
+      },
+      "id": "filter-rows",
+      "name": "Filter Valid Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.video_url}}",
+              "operation": "contains",
+              "value2": "tiktok.com"
+            }
+          ]
+        }
+      },
+      "id": "check-tiktok-url",
+      "name": "IF TikTok URL (Reject)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Reject video từ TikTok\nif (items.length > 0) {\n  throw new Error('❌ Video từ tiktok.com bị từ chối. Chỉ chấp nhận video gốc từ domain đã verify.');\n}\nreturn items;"
+      },
+      "id": "reject-tiktok",
+      "name": "Reject TikTok Source",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "bucketName": "your-tiktok-videos",
+        "fileName": "={{$json.id}}_{{Date.now()}}.mp4",
+        "binaryData": true,
+        "additionalFields": {
+          "acl": "public-read"
+        }
+      },
+      "id": "s3-upload",
+      "name": "Upload to S3",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 1,
+      "credentials": {
+        "aws": {
+          "id": "2",
+          "name": "AWS S3"
+        }
+      },
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Chuẩn hóa hashtags\nconst baseHashtags = ($json.hashtags_base || '')\n  .split(/\\s+/)\n  .filter(Boolean)\n  .map(tag => tag.startsWith('#') ? tag : '#' + tag.toLowerCase());\n\nconst uniqueHashtags = [...new Set(baseHashtags)].slice(0, 10);\n\nreturn [{\n  json: {\n    ...$json,\n    hashtags: uniqueHashtags,\n    public_video_url: $json.s3_url || $json.video_url\n  }\n}];"
+      },
+      "id": "normalize-hashtags",
+      "name": "Normalize Hashtags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 300
+        },
+        "messages": [
+          {
+            "role": "system",
+            "content": "Nhiệm vụ: Viết caption ngắn gọn cho video TikTok với CTA mua hàng.\\n\\nĐầu vào:\\n- Tiêu đề: {{$json.title_seed}}\\n- Hashtag nền: {{$json.hashtags.join(' ')}}\\n- Link sản phẩm: {{$json.shopee_links}}\\n\\nYêu cầu:\\n1. Caption 2-3 câu, 140-300 ký tự\\n2. Ngôn ngữ tự nhiên, gần gũi\\n3. CTA rõ ràng\\n4. Thêm 6-10 hashtag liên quan (KHÔNG lặp)\\n5. Bắt buộc có #ad hoặc #affiliate\\n6. Không claim quá mức\\n\\nJSON output: {\\\"caption\\\":\\\"...\\\",\\\"hashtags\\\":[\\\"#...\\\"]}"
+          }
+        ]
+      },
+      "id": "generate-caption",
+      "name": "Generate Caption (AI)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "3",
+          "name": "OpenAI"
+        }
+      },
+      "position": [1450, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Hợp nhất caption + hashtags\nconst aiOutput = JSON.parse(items[0].json.message.content);\nconst allHashtags = [\n  ...new Set([\n    ...(aiOutput.hashtags || []),\n    ...$json.hashtags\n  ])\n].slice(0, 10);\n\nconst finalCaption = `${aiOutput.caption} ${allHashtags.join(' ')}`;\n\n// Thêm link Shopee nếu có\nconst shopeeLinks = ($json.shopee_links || '').split(',').map(l => l.trim()).filter(Boolean);\nconst linksSection = shopeeLinks.length > 0 \n  ? `\\n\\n🛒 Mua ngay:\\n${shopeeLinks.join('\\n')}`\n  : '';\n\nreturn [{\n  json: {\n    ...$json,\n    final_caption: finalCaption + linksSection\n  }\n}];"
+      },
+      "id": "assemble-caption",
+      "name": "Assemble Final Caption",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1650, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/video/init/",
+        "authentication": "oAuth2",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "post_info",
+              "value": "={\"title\":\"{{$json.final_caption}}\",\"privacy_level\":\"{{$json.privacy_level || 'PUBLIC_TO_EVERYONE'}}\",\"disable_duet\":{{$json.disable_duet || false}},\"disable_comment\":{{$json.disable_comment || false}},\"disable_stitch\":{{$json.disable_stitch || false}},\"video_cover_timestamp_ms\":1000,\"brand_content_toggle\":true}"
+            },
+            {
+              "name": "source_info",
+              "value": "={\"source\":\"PULL_FROM_URL\",\"video_url\":\"{{$json.public_video_url}}\"}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "tiktok-init",
+      "name": "TikTok Direct Post (Init)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "4",
+          "name": "TikTok OAuth2"
+        }
+      },
+      "position": [1850, 400]
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "id": "wait",
+      "name": "Wait 10s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [2050, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
+        "authentication": "oAuth2",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "publish_id",
+              "value": "={{$json.data.publish_id}}"
+            }
+          ]
+        }
+      },
+      "id": "tiktok-status",
+      "name": "TikTok Check Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "4",
+          "name": "TikTok OAuth2"
+        }
+      },
+      "position": [2250, 400]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "Posts!A{{$json.rowNumber}}:Z{{$json.rowNumber}}",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "id": "update-sheet",
+      "name": "Update Sheet (Success)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1",
+          "name": "Google Sheets OAuth2"
+        }
+      },
+      "position": [2450, 400]
+    },
+    {
+      "parameters": {
+        "text": "✅ Video đã đăng thành công!\\n📹 Title: {{$json.title_seed}}\\n🔗 Post ID: {{$json.tiktok_publish_id}}\\n⏰ Time: {{$now.format('DD/MM/YYYY HH:mm')}}"
+      },
+      "id": "notify-success",
+      "name": "Notify Success (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": {
+          "id": "5",
+          "name": "Telegram"
+        }
+      },
+      "position": [2650, 400]
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [[{ "node": "Read Google Sheet", "type": "main", "index": 0 }]]
+    },
+    "Read Google Sheet": {
+      "main": [[{ "node": "Filter Valid Rows", "type": "main", "index": 0 }]]
+    },
+    "Filter Valid Rows": {
+      "main": [[{ "node": "IF TikTok URL (Reject)", "type": "main", "index": 0 }]]
+    },
+    "IF TikTok URL (Reject)": {
+      "main": [
+        [{ "node": "Reject TikTok Source", "type": "main", "index": 0 }],
+        [{ "node": "Upload to S3", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload to S3": {
+      "main": [[{ "node": "Normalize Hashtags", "type": "main", "index": 0 }]]
+    },
+    "Normalize Hashtags": {
+      "main": [[{ "node": "Generate Caption (AI)", "type": "main", "index": 0 }]]
+    },
+    "Generate Caption (AI)": {
+      "main": [[{ "node": "Assemble Final Caption", "type": "main", "index": 0 }]]
+    },
+    "Assemble Final Caption": {
+      "main": [[{ "node": "TikTok Direct Post (Init)", "type": "main", "index": 0 }]]
+    },
+    "TikTok Direct Post (Init)": {
+      "main": [[{ "node": "Wait 10s", "type": "main", "index": 0 }]]
+    },
+    "Wait 10s": {
+      "main": [[{ "node": "TikTok Check Status", "type": "main", "index": 0 }]]
+    },
+    "TikTok Check Status": {
+      "main": [[{ "node": "Update Sheet (Success)", "type": "main", "index": 0 }]]
+    },
+    "Update Sheet (Success)": {
+      "main": [[{ "node": "Notify Success (Telegram)", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {}
+}

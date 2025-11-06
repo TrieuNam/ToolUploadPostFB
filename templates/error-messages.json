@@ -1,0 +1,13 @@
+{
+  "errors": {
+    "videoUpload": "Video upload failed. Please check the video URL and ensure it is accessible.",
+    "invalidVideoFormat": "The video format is not supported. Please use MP4 format.",
+    "domainVerification": "Domain verification failed. Ensure your domain is verified with TikTok.",
+    "accessTokenExpired": "Access token has expired. Please refresh your token.",
+    "rateLimitExceeded": "Rate limit exceeded. Please wait before making more requests.",
+    "invalidShopeeLink": "The Shopee affiliate link is invalid. Please check the link format.",
+    "captionGenerationFailed": "Failed to generate caption. Please try again later.",
+    "hashtagNormalizationError": "Error normalizing hashtags. Please ensure they are formatted correctly.",
+    "generalError": "An unexpected error occurred. Please try again."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "prompts": [
+    {
+      "description": "Generate a catchy caption for a product review video.",
+      "template": "Check out this amazing product! {{product_name}} is a game changer. Don't miss out! #ad #affiliate"
+    },
+    {
+      "description": "Create a fun and engaging caption for a discount announcement.",
+      "template": "🎉 Big news! Get {{discount_percentage}} off on {{product_name}}! Hurry, limited time only! 🛒 #shopeedeal #ad"
+    },
+    {
+      "description": "Write a caption that encourages viewers to click the affiliate link.",
+      "template": "Want to know more about {{product_name}}? Click the link below to grab yours now! #affiliate #ad"
+    },
+    {
+      "description": "Craft a caption for a seasonal promotion.",
+      "template": "🌟 Celebrate the season with {{product_name}}! Special offer just for you! #ad #shopeedeal"
+    },
+    {
+      "description": "Generate a caption for a tutorial or how-to video.",
+      "template": "Learn how to use {{product_name}} like a pro! Check out the link for more details! #affiliate #ad"
+    }
+  ]
+}
