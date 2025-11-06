@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Video Extractor</title>
+    <style>
+        body {
+            width: 350px;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            color: #333;
+        }
+        p {
+            margin: 0 0 20px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .info-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .info-item {
+            color: #555;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        .emoji {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 TikTok Video Extractor</h1>
+        <p>Trích xuất link video từ TikTok profile</p>
+        
+        <button id="extract-btn" class="button">
+            📋 Extract Videos from Current Page
+        </button>
+        
+        <div class="info">
+            <div class="info-title">📖 Hướng dẫn sử dụng:</div>
+            <div class="info-item">
+                <span class="emoji">1️⃣</span> Mở TikTok profile
+            </div>
+            <div class="info-item">
+                <span class="emoji">2️⃣</span> Scroll để load thêm video
+            </div>
+            <div class="info-item">
+                <span class="emoji">3️⃣</span> Click "Extract Videos"
+            </div>
+            <div class="info-item">
+                <span class="emoji">4️⃣</span> Copy hoặc download JSON
+            </div>
+        </div>
+        
+        <div class="info" style="margin-top: 10px; background: #fff3cd;">
+            <div style="color: #856404; font-size: 12px;">
+                <strong>💡 Tip:</strong> Button "Extract Videos" cũng xuất hiện góc phải màn hình khi bạn vào TikTok profile!
+            </div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
