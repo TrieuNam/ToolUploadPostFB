@@ -81,8 +81,8 @@ def import_json_to_excel(json_file, excel_file):
             
             # Check duplicate
             is_duplicate = False
-            for row in ws.iter_rows(min_row=2, max_col=12, values_only=True):
-                if row[1] == url or row[11] == url:  # video_download_url or tiktok_url
+            for row in ws.iter_rows(min_row=2, max_col=16, values_only=True):
+                if row[1] == url or row[10] == url:  # video_download_url (col 2) or tiktok_url (col 11)
                     is_duplicate = True
                     break
             
@@ -91,26 +91,29 @@ def import_json_to_excel(json_file, excel_file):
                 skipped_count += 1
                 continue
             
-            # Tạo row mới
+            # Tạo row mới - Match với Excel structure CÓ description
+            # Excel headers: id, video_download_url, title, description, hashtags, 
+            #                shopee_links, status, local_video_url, local_video_path, 
+            #                video_size, tiktok_url, error_message, facebook_post_id, 
+            #                facebook_post_url, facebook_posted_at, scheduled_time
             new_id = max_id + added_count + 1
             new_row = [
-                new_id,                              # id
-                url,                                 # video_download_url
-                f"{title_template} #{new_id}",      # title
-                description,                         # description
-                hashtags,                            # hashtags
-                shopee_links,                        # shopee_links
-                "",                                  # scheduled_time (empty = post ngay)
-                "NEW",                               # status
-                "",                                  # local_video_url
-                "",                                  # local_video_path
-                "",                                  # video_size
-                url,                                 # tiktok_url
-                video_id or "",                      # tiktok_post_id
-                "",                                  # facebook_post_id
-                "",                                  # facebook_post_url
-                "",                                  # facebook_posted_at
-                ""                                   # error_message
+                new_id,                              # 1. id
+                url,                                 # 2. video_download_url
+                f"{title_template} #{new_id}",      # 3. title
+                description,                         # 4. description ← NEW
+                hashtags,                            # 5. hashtags
+                shopee_links,                        # 6. shopee_links
+                "NEW",                               # 7. status
+                "",                                  # 8. local_video_url
+                "",                                  # 9. local_video_path
+                "",                                  # 10. video_size
+                url,                                 # 11. tiktok_url
+                "",                                  # 12. error_message
+                "",                                  # 13. facebook_post_id
+                "",                                  # 14. facebook_post_url
+                "",                                  # 15. facebook_posted_at
+                ""                                   # 16. scheduled_time (empty = post ngay)
             ]
             
             ws.append(new_row)
