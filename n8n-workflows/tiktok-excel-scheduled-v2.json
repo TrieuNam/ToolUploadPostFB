@@ -1,0 +1,198 @@
+{
+  "name": "TikTok Excel Auto-Post (Working)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/30 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "command": "node D:\\project\\ToolAuto\\tiktok-shopee-automation\\scripts\\read-excel-for-n8n.js"
+      },
+      "id": "read-excel",
+      "name": "Read Excel",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse JSON output from Excel reader\nconst output = items[0].json.stdout;\nconst data = JSON.parse(output);\n\n// Return each video as separate item\nreturn data.videos.map(video => ({\n  json: video\n}));"
+      },
+      "id": "parse-json",
+      "name": "Parse Excel Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equals",
+              "value2": "NEW"
+            }
+          ]
+        }
+      },
+      "id": "filter-new",
+      "name": "Filter NEW Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd D:\\project\\ToolAuto\\tiktok-shopee-automation && npm run download:ytdlp"
+      },
+      "id": "download-videos",
+      "name": "Download Videos",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "amount": 60,
+        "unit": "seconds"
+      },
+      "id": "wait-download",
+      "name": "Wait for Download",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "command": "cd D:\\project\\ToolAuto\\tiktok-shopee-automation && node scripts\\facebook-publisher-simple.js"
+      },
+      "id": "post-to-facebook",
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "operation": "sendEmail",
+        "to": "trieuphunongnam97@gmail.com",
+        "subject": "✅ Videos Posted to Facebook - {{ $now.toLocaleString('vi-VN') }}",
+        "emailFormat": "html",
+        "message": "<!DOCTYPE html>\n<html lang=\"vi\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Video Posted to Facebook</title>\n</head>\n<body style=\"margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;\">\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f4f4f4; padding: 20px;\">\n        <tr>\n            <td align=\"center\">\n                <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n                    \n                    <!-- Header -->\n                    <tr>\n                        <td style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;\">\n                            <h1 style=\"margin: 0; color: #ffffff; font-size: 28px;\">\n                                🎉 Video Posted Successfully!\n                            </h1>\n                        </td>\n                    </tr>\n                    \n                    <!-- Content -->\n                    <tr>\n                        <td style=\"padding: 30px;\">\n                            \n                            <!-- Success Message -->\n                            <div style=\"background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 4px;\">\n                                <p style=\"margin: 0; color: #155724; font-weight: bold;\">\n                                    ✅ Videos have been posted to Facebook!\n                                </p>\n                            </div>\n                            \n                            <!-- Execution Info -->\n                            <h2 style=\"color: #333333; font-size: 20px; margin-top: 0;\">\n                                📊 Execution Details:\n                            </h2>\n                            \n                            <table width=\"100%\" cellpadding=\"8\" cellspacing=\"0\" style=\"border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 20px;\">\n                                <tr style=\"background-color: #f8f9fa;\">\n                                    <td style=\"font-weight: bold; color: #555; width: 30%;\">Status:</td>\n                                    <td style=\"color: #28a745; font-weight: bold;\">SUCCESS ✓</td>\n                                </tr>\n                                <tr>\n                                    <td style=\"font-weight: bold; color: #555;\">Execution Time:</td>\n                                    <td style=\"color: #333;\">{{ $now.toLocaleString('vi-VN') }}</td>\n                                </tr>\n                                <tr style=\"background-color: #f8f9fa;\">\n                                    <td style=\"font-weight: bold; color: #555;\">Output:</td>\n                                    <td style=\"color: #333; font-family: monospace; font-size: 12px;\">{{ $json.stdout.substring(0, 200) }}...</td>\n                                </tr>\n                            </table>\n                            \n                            <!-- Stats -->\n                            <div style=\"background-color: #e3f2fd; padding: 15px; border-radius: 4px; margin-bottom: 20px;\">\n                                <h3 style=\"margin: 0 0 10px 0; color: #1976d2; font-size: 16px;\">\n                                    🤖 Workflow Info:\n                                </h3>\n                                <p style=\"margin: 5px 0; color: #555;\">\n                                    <strong>Next run:</strong> 30 minutes\n                                </p>\n                                <p style=\"margin: 5px 0; color: #555;\">\n                                    <strong>Excel file:</strong> data/posts.xlsx\n                                </p>\n                            </div>\n                            \n                            <!-- Footer Info -->\n                            <div style=\"border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 20px;\">\n                                <p style=\"margin: 5px 0; color: #777; font-size: 14px;\">\n                                    🤖 <strong>Automated by n8n</strong>\n                                </p>\n                                <p style=\"margin: 5px 0; color: #777; font-size: 14px;\">\n                                    📁 Workflow: TikTok Excel Auto-Post\n                                </p>\n                            </div>\n                            \n                        </td>\n                    </tr>\n                    \n                    <!-- Footer -->\n                    <tr>\n                        <td style=\"background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;\">\n                            <p style=\"margin: 0; color: #777; font-size: 12px;\">\n                                TikTok to Facebook Auto-Post System<br>\n                                Powered by ToolUploadPostFB\n                            </p>\n                            <p style=\"margin: 10px 0 0 0; color: #999; font-size: 11px;\">\n                                © 2025 - Automated with ❤️\n                            </p>\n                        </td>\n                    </tr>\n                    \n                </table>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>"
+      },
+      "id": "notify-success",
+      "name": "Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1650, 200],
+      "credentials": {
+        "smtp": {
+          "id": "1",
+          "name": "Gmail SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Every 30 min": {
+      "main": [
+        [
+          {
+            "node": "Read Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Excel": {
+      "main": [
+        [
+          {
+            "node": "Parse Excel Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Excel Data": {
+      "main": [
+        [
+          {
+            "node": "Filter NEW Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter NEW Status": {
+      "main": [
+        [
+          {
+            "node": "Download Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Videos": {
+      "main": [
+        [
+          {
+            "node": "Wait for Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Download": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-07T00:00:00.000Z",
+  "versionId": "1"
+}

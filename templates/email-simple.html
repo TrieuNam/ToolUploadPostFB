@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: -30px -30px 20px -30px; }
+        .success { background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin: 20px 0; border-radius: 4px; color: #155724; }
+        .info-box { border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; margin: 15px 0; }
+        .info-row { display: flex; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+        .info-row:last-child { border-bottom: none; }
+        .label { font-weight: bold; color: #555; width: 150px; }
+        .value { color: #333; }
+        .button { display: inline-block; background: #1877f2; color: white !important; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .footer { text-align: center; color: #777; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0;">🎉 Video Posted to Facebook!</h1>
+        </div>
+        
+        <div class="success">
+            <strong>✅ Success!</strong> Your video has been posted to Facebook
+        </div>
+        
+        <h2 style="color: #333;">📹 Video Details:</h2>
+        <div class="info-box">
+            <div class="info-row">
+                <span class="label">Video ID:</span>
+                <span class="value">{{ $json.id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Title:</span>
+                <span class="value">{{ $json.title }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Status:</span>
+                <span class="value" style="color: #28a745; font-weight: bold;">POSTED ✓</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Posted at:</span>
+                <span class="value">{{ $json.facebook_posted_at }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Facebook Post:</span>
+                <span class="value">
+                    <a href="{{ $json.facebook_post_url }}" style="color: #1877f2;">View Post →</a>
+                </span>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ $json.facebook_post_url }}" class="button">
+                👉 Open on Facebook
+            </a>
+        </div>
+        
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 4px; margin-top: 20px;">
+            <h3 style="margin: 0 0 10px 0; color: #1976d2;">📊 Workflow Info:</h3>
+            <p style="margin: 5px 0; color: #555;">
+                🤖 <strong>Automated by n8n</strong><br>
+                ⏰ <strong>Next run:</strong> 30 minutes<br>
+                📁 <strong>Excel:</strong> data/posts.xlsx
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>TikTok to Facebook Auto-Post System<br>
+            Powered by <strong>ToolUploadPostFB</strong></p>
+            <p style="color: #999; font-size: 11px;">© 2025 - Automated with ❤️</p>
+        </div>
+    </div>
+</body>
+</html>
